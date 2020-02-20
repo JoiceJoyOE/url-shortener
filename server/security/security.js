@@ -5,7 +5,7 @@ module.exports = function (req, res, next) {
     res.set('X-Frame-Options', 'deny')
     res.set('X-XSS-Protection', '1; mode=block')
     res.set('Referrer-Policy', 'same-origin')
-    res.set('Strict-Transport-Security', `max-age=${WIKI.config.securityHSTSDuration}; includeSubDomains`)
+    res.set('Strict-Transport-Security', `max-age=600; includeSubDomains`)
   
     return next()
   }

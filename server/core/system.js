@@ -8,26 +8,20 @@ const session = require('express-session');
 const knexSessionStore = require('connect-session-knex')(session);
 const _ = require('lodash');
 const http = require('http');
-const ip = require('ip');
 
 module.exports = {
-    async init() {
-        const SYSTEM = {
-            config: {}
-        };
-        SYSTEM.config.cors = {
-            credentials: false,
-            maxAge: 600,
-            methods: 'GET,POST',
-            origin: true
-        }
+    SYSTEM: {
+        config: {}
+    },
+    async start() {
+        await this.initializeConfig();
         const app = express();
-        SYSTEM.app = app;
-        app.use(compression);
+        SHORTURL.app = app;
+        // app.use(compression);
         const securityHeaders = require('../security/security');
-        // app.use(securityHeaders);
-        // app.use(cors(SYSTEM.config.cors));
-        // app.options('*', cors(SYSTEM.config.cors));
+        app.use(securityHeaders);
+        app.use(cors(this.SYSTEM.config.cors));
+        app.options('*', cors(this.SYSTEM.config.cors));
 
         // const ssl = require('../security/ssl');
         // app.use('/', ssl);
@@ -35,14 +29,19 @@ module.exports = {
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: true }));
         app.get('/hello', (req, res) => {
+            console.log('Hello');
             res.status(200).send({
-                message: 'Hello World!'
+                message: SHORTURL.name
             })
         })
-        
-        app.listen(8080, ip.address(), () => {
-            console.log('server running on port: ' + 8080);
+        SHORTURL.system.startHttpServer();
+    },
+    async startHttpServer() {
+        await SHORTURL.app.listen(SHORTURL.config.serverPort, SHORTURL.config.serverIP, () => {
+            console.log('server running on port: ' + SHORTURL.config.serverPort);
         });
-        return SYSTEM;
+    },
+    async initializeConfig() {
+        require('./config').initialize();
     }
 }
